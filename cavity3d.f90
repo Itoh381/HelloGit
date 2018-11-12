@@ -10,10 +10,11 @@ module precision_module
 end module precision_module
 
 !***********************************************************************
-!     The main program                              
+!     The main program
 !***********************************************************************
 program lattice_Boltzmann_method
   use precision_module
+  use bb
   implicit none
   integer :: nstep
   integer :: igrid, jgrid, kgrid, ngrid, ith, itm, its
@@ -46,16 +47,16 @@ program lattice_Boltzmann_method
 
 !  call output_xyzgrd
   call initialize
-  
+
  ! call cpu_time(t0)
  ! t1 = t0
-  
+
   do n = 1, nstep
 
     call equilibrium(1, igrid, 1, jgrid, 1,kgrid,feq)
     call collision(1, igrid, 1, jgrid,1,kgrid)
     call translation
-    call boundary(n)
+    call boundary_a(n)
     call macro(n)
 
 !    if(mod(n,1) == 0) then
@@ -64,25 +65,25 @@ program lattice_Boltzmann_method
 !		write(6,'(a,i6,a,e14.7,a,f10.5,a)') ' step = ', n,', residual = ', re,', cpu time = ',t2-t1,'[s]'
 !		t1 = t2
 !	endif
-	
+
 	if( n >= 40000 .and. mod(n,100) == 0 )then
 		call outdat(n)
 	endif
-	
+
   enddo
   call outdat(n)
-  
+
 !  call cpu_time(t1)
 !  ith = aint((t1-t0)/3600.0)
 !  itm = aint(amod((t1-t0),3600.0)/60.0)
 !  its = amod(amod((t1-t0),3600.0),60.0)
-	
+
 !  write(6,'(a,3(i3,a))') 'total cpu time=  ',ith,'h',itm,'m',its,'s'
-  
+
   contains
 
 !***********************************************************************
-!     Lattice constants for the D2Q9 lattice                              
+!     Lattice constants for the D2Q9 lattice
 !***********************************************************************
   subroutine define_c
     implicit none
@@ -138,7 +139,7 @@ program lattice_Boltzmann_method
   end subroutine
 
 !***********************************************************************
-!     Lattice constants for the D3Q15 lattice                              
+!     Lattice constants for the D3Q15 lattice
 !***********************************************************************
   subroutine define_c15
     implicit none
@@ -163,12 +164,12 @@ program lattice_Boltzmann_method
     c(1, 6) =  0.0
     c(1, 7) =  1.0
     c(1, 8) = -1.0
-	c(1, 9) = -1.0
-	c(1,10) =  1.0
-	c(1,11) =  1.0
-	c(1,12) = -1.0
-	c(1,13) = -1.0
-	c(1,14) =  1.0
+	  c(1, 9) = -1.0
+	  c(1,10) =  1.0
+	  c(1,11) =  1.0
+	  c(1,12) = -1.0
+	  c(1,13) = -1.0
+	  c(1,14) =  1.0
 
     c(2, 0) =  0.0
     c(2, 1) =  0.0
@@ -179,28 +180,28 @@ program lattice_Boltzmann_method
     c(2, 6) =  1.0
     c(2, 7) =  1.0
     c(2, 8) =  1.0
-	c(2, 9) = -1.0
-	c(2,10) = -1.0
-	c(2,11) =  1.0
-	c(2,12) =  1.0
-	c(2,13) = -1.0
-	c(2,14) = -1.0
-	
-	c(3, 0) =  0.0
-	c(3, 1) =  0.0
-	c(3, 2) =  0.0
-	c(3, 3) =  0.0
-	c(3, 4) =  0.0
-	c(3, 5) =  1.0
-	c(3, 6) = -1.0
-	c(3, 7) =  1.0
-	c(3, 8) =  1.0
-	c(3, 9) =  1.0
-	c(3,10) =  1.0
-	c(3,11) = -1.0
-	c(3,12) = -1.0
-	c(3,13) = -1.0
-	c(3,14) = -1.0
+	  c(2, 9) = -1.0
+  	c(2,10) = -1.0
+  	c(2,11) =  1.0
+	  c(2,12) =  1.0
+	  c(2,13) = -1.0
+	  c(2,14) = -1.0
+
+	  c(3, 0) =  0.0
+	  c(3, 1) =  0.0
+	  c(3, 2) =  0.0
+	  c(3, 3) =  0.0
+	  c(3, 4) =  0.0
+	  c(3, 5) =  1.0
+	  c(3, 6) = -1.0
+	  c(3, 7) =  1.0
+	  c(3, 8) =  1.0
+	  c(3, 9) =  1.0
+	  c(3,10) =  1.0
+	  c(3,11) = -1.0
+	  c(3,12) = -1.0
+	  c(3,13) = -1.0
+	  c(3,14) = -1.0
 
     w(0) = 2.0d0/ 9.0d0
     do l = 1, 6
@@ -218,17 +219,17 @@ program lattice_Boltzmann_method
     lb(6) = 5
     lb(7) = 13
     lb(8) = 14
-	lb(9) = 11
-	lb(10) = 12
-	lb(11) = 9
-	lb(12) = 10
-	lb(13) =  7
-	lb(14) =  8
+	  lb(9) = 11
+	  lb(10) = 12
+	  lb(11) = 9
+	  lb(12) = 10
+	  lb(13) =  7
+	  lb(14) =  8
 
   end subroutine
 
 !***********************************************************************
-!    Initialize the simulation at an equilibrium distribution                              
+!    Initialize the simulation at an equilibrium distribution
 !***********************************************************************
   subroutine initialize
     implicit none
@@ -241,22 +242,22 @@ program lattice_Boltzmann_method
     enddo; enddo
 
   !++++ cavity flow ++++++++++++++++++++++++++++++++
-	do k = 1, kgrid
+	  do k = 1, kgrid
     do j = 1, jgrid
     do i = 1, igrid
        q(i, j, k, 1) = 1.0
        q(i, j, k, 2) = 0.0
        q(i, j, k, 3) = 0.0
        q(i, j, k, 4) = 0.0
-	   q(i, l, k, 5) = 1.0/3.0
+	     q(i, j, k, 5) = 1.0/3.0
     enddo; enddo;enddo
-	
+
     do k= 1, kgrid
-	do i = 1, igrid
+	  do i = 1, igrid
        q(i, jgrid, k,1) = 1.0
        q(i, jgrid, k,2) = uc
        q(i, jgrid, k,3) = 0.0
-	   q(i, jgrid, k,4) = 0.0
+	     q(i, jgrid, k,4) = 0.0
        q(i, jgrid, k,5) = 0.33
     enddo;enddo
 
@@ -266,7 +267,7 @@ program lattice_Boltzmann_method
   end subroutine
 
 !***********************************************************************
-!    Compute equilibrium distribution                           
+!    Compute equilibrium distribution
 !***********************************************************************
   subroutine equilibrium(ist, ien, jst, jen, kst, ken, f)
     implicit none
@@ -275,7 +276,7 @@ program lattice_Boltzmann_method
     integer      :: i, j, k, l
     real(lbkind) :: uu, cu
 
-	do k = kst, ken
+	  do k = kst, ken
     do j = ist, ien
     do i = jst, jen
       uu = q(i, j, 2) * q(i, j, 2) + q(i, j, 3) * q(i, j, 3) + q(i, j, 4) * q(i, j, 4)
@@ -296,7 +297,7 @@ program lattice_Boltzmann_method
     integer :: ist, ien, jst, jen, kst, ken
     integer :: i, j, k, l
 
-	do k = kst, ken
+	  do k = kst, ken
     do i = ist, ien
     do j = jst, jen
     do l = 0, 14
@@ -319,18 +320,18 @@ program lattice_Boltzmann_method
 
       id = c(1,l)
       jd = c(2,l)
-	  kd = c(3,l)
+	    kd = c(3,l)
 
-	  do k = 1, kgrid
+	    do k = 1, kgrid
       do j = 1, jgrid
       do i = 1, igrid
         ii = max(min(i-id,igrid),1)
         jj = max(min(j-jd,jgrid),1)
-		kk = max(min(k-kd,kgrid),1)
+		    kk = max(min(k-kd,kgrid),1)
         ft(i,j,k) = f(ii,jj,kk,l)
       enddo; enddo;enddo
 
-	  do k= 1,kgrid
+	    do k= 1,kgrid
       do j = 1, jgrid
       do i = 1, igrid
         f(i,j,k,l) = ft(i,j,k)
@@ -341,7 +342,7 @@ program lattice_Boltzmann_method
     deallocate(ft)
 
   end subroutine
-  
+
 !***********************************************************************
 !    Print out simulation parameters to screen
 !***********************************************************************
@@ -349,11 +350,11 @@ program lattice_Boltzmann_method
     implicit none
     integer      :: i, j, k, l, n
     real(lbkind) :: rho, u, v, w
-	real(lbkind) :: resi, qref
+	  real(lbkind) :: resi, qref
 
     resi = 0.0d0
 
-	do k = 1, kgrid
+  	do k = 1, kgrid
     do j = 1, jgrid
     do i = 1, igrid
 
@@ -365,7 +366,7 @@ program lattice_Boltzmann_method
         rho = rho + f(i, j, k,l)
         u   = u   + f(i, j, k,l) * c(1, l)
         v   = v   + f(i, j, k,l) * c(2, l)
-		w  = w  + f(i,j,k,l) * c(3,l)
+	    	w  = w  + f(i,j,k,l) * c(3,l)
       enddo
 
       resi = resi + abs(q(i, j, k,2) - u / rho)**2.0
@@ -373,12 +374,12 @@ program lattice_Boltzmann_method
       q(i, j, 1) = rho
       q(i, j, 2) = u / rho  !> x - velocity
       q(i, j, 3) = v / rho  !> y - velocity
-	  q(i, j, 4) = w / rho !> z - velocity
+	    q(i, j, 4) = w / rho !> z - velocity
       q(i, j, 5) = rho / 3.0 !> pressure
 
       qref = qref + abs(q(i, j, k,2))**2.0
 
-    enddo; enddo
+    enddo; enddo; enddo
 
     resi = sqrt( resi / real(igrid * jgrid*kgrid) )
     qref = sqrt( qref / real(igrid * jgrid*kgrid) )
@@ -400,10 +401,10 @@ program lattice_Boltzmann_method
     integer, intent(in) :: n
     integer :: i, j,k, l
     real(lbkind) :: fsmach, alpha, time
-	real(lbkind),allocatable :: qq(:,:,:,:)
-    character(len=7) :: 
+	  real(lbkind),allocatable :: qq(:,:,:,:)
+    character(len=7) :: cn
 
-	allocate(qq(igrid,jgrid,kgrid,5))
+	  allocate(qq(igrid,jgrid,kgrid,5))
     open(1, file='res.xyz', form='unformatted', status='unknown')
     write(1) igrid, jgrid, kgrid
     write(1) (((real(x(i, j, k)), i = 1, igrid), j = 1, jgrid),k=1,kgrid), &
@@ -411,8 +412,8 @@ program lattice_Boltzmann_method
 			(((real(z(i, j, k)), i = 1, igrid), j = 1, jgrid),k=1,kgrid)
     close(1)
 
-	do k = 1, kgrid
-	do j = 1, jgrid
+	  do k = 1, kgrid
+	  do j = 1, jgrid
     do i = 1, igrid
 	  qq(i,j,k,1) = q(i,j,k,1)
       qq(i, j, k,2) = q(i, j, k,1) * q(i, j, k,2)
@@ -435,9 +436,9 @@ program lattice_Boltzmann_method
 !      q(i, j, 3) = q(i, j, 3) / q(i, j, 1)
 !    enddo; enddo
 
-	deallocate(qq)
+	  deallocate(qq)
   end subroutine
 
-  include'lbm_param.f90'
-	
+  include'cavity3d_param.f90'
+
  end

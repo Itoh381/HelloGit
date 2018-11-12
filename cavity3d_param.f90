@@ -1,5 +1,5 @@
 !***********************************************************************
-!     Constants for simulation setup                
+!     Constants for simulation setup
 !***********************************************************************
 subroutine condition
     implicit none
@@ -9,7 +9,7 @@ subroutine condition
 
     igrid = 129
     jgrid = 129
-	kgrid = 129
+	  kgrid = 129
     ngrid = jgrid
 
   !
@@ -38,148 +38,9 @@ subroutine condition
 end subroutine
 
 !***********************************************************************
-!     Implement Bounce-back on upper/lower boundaries                          
+!     Implement Bounce-back on upper/lower boundaries
 !***********************************************************************
-subroutine boundary(n)
-    implicit none
-!    integer, parameter :: nz = 24
-!    integer, intent(in) :: n
-    integer      :: i, j, k, l, m, id, jd, kd
-!    real(lbkind) :: fa, uw, vw, pi, x, y, theta
-!    real(lbkind), save :: p(2,5*nz)
-!    real(lbkind) :: xt(2,2), yt(2,2)
 
-    i = igrid
-    do j = 1, jgrid
-      q(i, j, 1) = 1.0
-      q(i, j, 2) = q(i-1, j, 2)
-      q(i, j, 3) = q(i-1, j, 3)
-    enddo
-    call equilibrium(i, i, 1, jgrid, f)
-
-    i = 1
-    do j = 1, jgrid
-      q(i, j, 1) = q(i+1, j, 1)
-      q(i, j, 2) = uc
-      q(i, j, 3) = 0.0
-    enddo
-    call equilibrium(i, i, 1, jgrid, f)
-
-    j = 1
-    f(i, j, 1) = f(i, j, 3)
-    f(i, j, 2) = f(i, j, 4)
-    f(i, j, 5) = f(i, j, 7)
-    fa = 0.5d0*( f(i, j, 6) + f(i, j, 8) )
-    f(i, j, 6) = fa
-    f(i, j, 8) = fa
-    !
-    j = jgrid
-    f(i, j, 1) = f(i, j, 3)
-    f(i, j, 4) = f(i, j, 2)
-    f(i, j, 8) = f(i, j, 6)
-    fa = 0.5d0*( f(i, j, 5) + f(i, j, 7) )
-    f(i, j, 5) = fa
-    f(i, j, 7) = fa
-
-    j = 1
-    do i = 2, igrid-1
-      f(i, j, 2) = f(i, j, 4)
-      f(i, j, 5) = f(i, j, 7)
-      f(i, j, 6) = f(i, j, 8)
-      fa = 0.5d0*( f(i, j, 1) + f(i, j, 3) )
-      f(i, j, 1) = fa
-      f(i, j, 3) = fa
-    enddo
-
-    j = jgrid
-    do i = 2, igrid-1
-      f(i, j, 4) = f(i, j, 2)
-      f(i, j, 7) = f(i, j, 5)
-      f(i, j, 8) = f(i, j, 6)
-      fa = 0.5d0*( f(i, j, 1) + f(i, j, 3) )
-      f(i, j, 1) = fa
-      f(i, j, 3) = fa
-    enddo
-
-    do j = 1, jgrid
-		do i = 1, igrid
-			ibk(i,j) = 0
-			s(i,j,:) = -1.0
-			r(i,j,:) = -1.0
-		enddo
-	enddo
-
-    pi = acos(-1.0d0)
-    uw = 0.0
-    vw = 0.05 * cos(2.0d0*pi*real(n)/1000.0d0)
-    if( n == 1 )then
-      !  definition of square cylinder
-      p(1,1) = 20.3;  p(2,1) = 49.1!5.1
-      p(1,2) = 20.3;  p(2,2) = 51.7!4.7
-      p(1,3) = 30.9;  p(2,3) = 51.7!4.7
-      p(1,4) = 30.9;  p(2,4) = 49.1!5.1
-      p(1,5) = 20.3;  p(2,5) = 49.1!5.1
-      do l = 1, 5
-        x = p(1,l)-25.0
-        y = p(2,l)-50.0
-        theta = -pi/6.0
-        p(1,l) = 25.0 + x*cos(theta) - y*sin(theta)
-        p(2,l) = 50.0 + x*sin(theta) + y*cos(theta)
-      enddo
-      do l = 6, 5*nz
-        x = p(1,l-5)-xc
-        y = p(2,l-5)-yc
-        theta = -2.0*pi/real(nz)
-        p(1,l) = xc + x*cos(theta) - y*sin(theta)
-        p(2,l) = yc + x*sin(theta) + y*cos(theta)
-      enddo
-      !
-      open(11,file='fan.xyz',status='unknown')
-      write(11,*) nz
-      write(11,*) (2, 2,l=1,nz)
-      do l=1,nz
-        xt(1,1) = p(1,1+5*(l-1));  yt(1,1) = p(2,1+5*(l-1))
-        xt(1,2) = p(1,2+5*(l-1));  yt(1,2) = p(2,2+5*(l-1))
-        xt(2,2) = p(1,3+5*(l-1));  yt(2,2) = p(2,3+5*(l-1))
-        xt(2,1) = p(1,4+5*(l-1));  yt(2,1) = p(2,4+5*(l-1))
-        write(11,*) ((xt(i,j)/real(ngrid-1),i=1,2),j=1,2) &
-                   ,((yt(i,j)/real(ngrid-1),i=1,2),j=1,2)
-      enddo
-      close(11)
-      !
-    else
-      !  movement of square cylinder
-      do l = 1, 5*nz
-        uw =  (p(2,l)-yc)*omg
-        vw = -(p(1,l)-xc)*omg
-        p(1,l) = p(1,l) + uw
-        p(2,l) = p(2,l) + vw
-      enddo
-    endif
-
-    do m = 1, nz
-		do l = 1, 4
-			k = 5*(m-1) + l
-			call crossx(p(1,k),p(1,k+1))
-			call crossy(p(1,k),p(1,k+1))
-		enddo
-	enddo
-    call cross
-
-    do j = 1, jgrid
-		do i = 1, igrid
-			if( ibk(i,j) == 1 )then
-				do l = 1, 8
-					if( s(i,j,l) >= 0.0 .and. s(i,j,l) <= 1.0 )then
-						call ibb2(i,j,l,s(i,j,l))
-					endif
-				enddo
-			endif
-		enddo
-	enddo
-
-end subroutine
- 
 subroutine crossx(a,b)!,u,v)
     implicit none
     integer      :: i, j
@@ -304,7 +165,7 @@ subroutine cross
     enddo; enddo
 
 end subroutine
- 
+
 subroutine ibb2(i,j,l,t)
     implicit none
     integer     , intent(in) :: i, j, l
@@ -338,6 +199,7 @@ end subroutine
     implicit none
     integer :: i,j,k,l,m,id,jd,kd
     real(4) :: resi
+    public :: bounce_back
 
     do l=1,pdm
 
@@ -355,93 +217,93 @@ end subroutine
           f(i,j,k,l) = f(i,j,k,m)
         endif
       enddo; enddo
-      i = g_imax
-      do k = g_kmin, g_kmax
-      do j = g_jmin, g_jmax
-        if( (i-id)<g_imin .or. (i-id)>g_imax .or. &
-            (j-jd)<g_jmin .or. (j-jd)>g_jmax .or. &
-            (k-kd)<g_kmin .or. (k-kd)>g_kmax )then
+      i = igrid
+      do k = 1, kgrid
+      do j = 1, jgrid
+        if( (i-id)<1 .or. (i-id)>igrid .or. &
+            (j-jd)<1 .or. (j-jd)>jgrid .or. &
+            (k-kd)<1 .or. (k-kd)>kgrid )then
           f(i,j,k,l) = f(i,j,k,m)
         endif
       enddo; enddo
 
-      j = g_jmin
-      do k = g_kmin, g_kmax
-      do i = g_imin, g_imax
-        if( (i-id)<g_imin .or. (i-id)>g_imax .or. &
-            (j-jd)<g_jmin .or. (j-jd)>g_jmax .or. &
-            (k-kd)<g_kmin .or. (k-kd)>g_kmax )then
+      j = 1
+      do k = 1, kgrid
+      do i = 1, igrid
+        if( (i-id)<1 .or. (i-id)>igrid .or. &
+            (j-jd)<1 .or. (j-jd)>jgrid .or. &
+            (k-kd)<1 .or. (k-kd)>kgrid )then
           f(i,j,k,l) = f(i,j,k,m)
         endif
       enddo; enddo
 
-      k = g_kmin
-      do j = g_jmin, g_jmax
-      do i = g_imin, g_imax
-        if( (i-id)<g_imin .or. (i-id)>g_imax .or. &
-            (j-jd)<g_jmin .or. (j-jd)>g_jmax .or. &
-            (k-kd)<g_kmin .or. (k-kd)>g_kmax )then
+      k = 1
+      do j = 1, jgrid
+      do i = 1, igrid
+        if( (i-id)<1 .or. (i-id)>igrid .or. &
+            (j-jd)<1 .or. (j-jd)>jgrid .or. &
+            (k-kd)<1 .or. (k-kd)>kgrid )then
           f(i,j,k,l) = f(i,j,k,m)
         endif
       enddo; enddo
-      k = g_kmax
-      do j = g_jmin, g_jmax
-      do i = g_imin, g_imax
-        if( (i-id)<g_imin .or. (i-id)>g_imax .or. &
-            (j-jd)<g_jmin .or. (j-jd)>g_jmax .or. &
-            (k-kd)<g_kmin .or. (k-kd)>g_kmax )then
+      k = kgrid
+      do j = 1, jgrid
+      do i = 1, igrid
+        if( (i-id)<1 .or. (i-id)>igrid .or. &
+            (j-jd)<1 .or. (j-jd)>jgrid .or. &
+            (k-kd)<1 .or. (k-kd)>kgrid )then
           f(i,j,k,l) = f(i,j,k,m)
         endif
       enddo; enddo
 
     enddo
 
-    i = g_imin
-    do k = g_kmin, g_kmax
-    do j = g_jmin, g_jmax
+    i = 1
+    do k = 1, kgrid
+    do j = 1, jgrid
        q(i,j,k,1:5) = macro_(f(i,j,k,0:pdm))
        q(i,j,k,2) = 0.0d0
        q(i,j,k,3) = 0.0d0
        q(i,j,k,4) = 0.0d0
     enddo; enddo
-    i = g_imax
-    do k = g_kmin, g_kmax
-    do j = g_jmin, g_jmax
-       q(i,j,k,1:5) = macro_(f(i,j,k,0:pdm))
-       q(i,j,k,2) = 0.0d0
-       q(i,j,k,3) = 0.0d0
-       q(i,j,k,4) = 0.0d0
-    enddo; enddo
-
-    j = g_jmin
-    do k = g_kmin, g_kmax
-    do i = g_imin, g_imax
+    i = igrid
+    do k = 1, kgrid
+    do j = 1, jgrid
        q(i,j,k,1:5) = macro_(f(i,j,k,0:pdm))
        q(i,j,k,2) = 0.0d0
        q(i,j,k,3) = 0.0d0
        q(i,j,k,4) = 0.0d0
     enddo; enddo
 
-    k = g_kmin
-    do j = g_jmin, g_jmax
-    do i = g_imin, g_imax
-       q(i,j,k,1:5) = macro_(f(i,j,k,0:pdm))
-       q(i,j,k,2) = 0.0d0
-       q(i,j,k,3) = 0.0d0
-       q(i,j,k,4) = 0.0d0
-    enddo; enddo
-    k = g_kmax
-    do j = g_jmin, g_jmax
-    do i = g_imin, g_imax
+    j = 1
+    do k = 1, kgrid
+    do i = 1, igrid
        q(i,j,k,1:5) = macro_(f(i,j,k,0:pdm))
        q(i,j,k,2) = 0.0d0
        q(i,j,k,3) = 0.0d0
        q(i,j,k,4) = 0.0d0
     enddo; enddo
 
-    j = g_jmax
-    do k = g_kmin, g_kmax
-    do i = g_imin, g_imax
+    k = 1
+    do j = 1, jgrid
+    do i = 1, igrid
+       q(i,j,k,1:5) = macro_(f(i,j,k,0:pdm))
+       q(i,j,k,2) = 0.0d0
+       q(i,j,k,3) = 0.0d0
+       q(i,j,k,4) = 0.0d0
+    enddo; enddo
+    k = kgrid
+    do j = 1, jgrid
+    do i = 1, igrid
+       q(i,j,k,1:5) = macro_(f(i,j,k,0:pdm))
+       q(i,j,k,2) = 0.0d0
+       q(i,j,k,3) = 0.0d0
+       q(i,j,k,4) = 0.0d0
+    enddo; enddo
+
+    j = jgrid
+    do k = 1, kgrid
+    do i = 1, igrid
 !       q(i,j,k,1) = 1.0d0
        q(i,j,k,1) = q(i,j-1,k,1)
        q(i,j,k,2) = uc
@@ -452,3 +314,69 @@ end subroutine
 
   end subroutine boundary_a
 !***********************************************************
+  module bb
+
+  use precision_module
+  implicit none
+
+  integer,parameter :: pdm = 14
+  public :: macro_
+  public :: equi_
+  public :: bounce_back
+
+  contains
+
+  function bounce_back(l) result(m)
+    implicit none
+    integer :: l,m
+    !
+    select case(l)
+    case( 1); m =  3
+    case( 2); m =  4
+    case( 3); m =  1
+    case( 4); m =  2
+    case( 5); m =  6
+    case( 6); m =  5
+    case( 7); m = 13
+    case( 8); m = 14
+    case( 9); m = 11
+    case(10); m = 12
+    case(11); m =  9
+    case(12); m = 10
+    case(13); m =  7
+    case(14); m =  8
+    end select
+    !
+  end function
+
+  !*******************************************************************
+  function macro_(f) result(q)
+  !*******************************************************************
+    integer      :: l
+    real(lbkind) :: f(0:pdm)
+    real(lbkind) :: q(5)
+      q = 0.0d0
+      do l = 0, pdm
+        q(1) = q(1) + f(l)
+        q(2) = q(2) + f(l)*c(1,l)
+        q(3) = q(3) + f(l)*c(2,l)
+        q(4) = q(4) + f(l)*c(3,l)
+      enddo
+      q(2) = q(2)/q(1)
+      q(3) = q(3)/q(1)
+      q(4) = q(4)/q(1)
+  end function
+
+  !*******************************************************************
+  function equi_(q) result(feq)
+  !*******************************************************************
+    integer      :: l
+    real(lbkind) :: uu, cu
+    real(lbkind) :: q(5)
+    real(lbkind) :: feq(0:pdm)
+      uu  = q(2)*q(2) + q(3)*q(3) + q(4)*q(4)
+      do l = 0, pdm
+        cu = q(2)*c(1,l) + q(3)*c(2,l) + q(4)*c(3,l)
+        feq(l) = wf(l)*q(1)*( 1.0d0 + 3.0d0*cu + 4.5d0*cu*cu - 1.5d0*uu )
+      enddo
+  end function
