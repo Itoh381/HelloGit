@@ -1,8 +1,0 @@
-Uc    0.1d0
-Re    3200
-imax  129
-jmax  129
-kmax  129
-nstep 5000
-ostep 500
-lcont 0
