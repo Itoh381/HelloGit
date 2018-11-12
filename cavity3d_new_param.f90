@@ -15,9 +15,8 @@
   public :: output_xyzgrd
   public :: output_xyzq
 
-  public :: boundary
+
   public :: boundary_a
-  public :: boundary_b
   public :: collision
   public :: translation
   public :: macro
